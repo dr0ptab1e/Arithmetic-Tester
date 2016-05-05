@@ -1,5 +1,7 @@
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import ru.yandex.qatools.allure.annotations.Step;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 @RunWith(Parameterized.class)
 public class ArithmeticTest {
@@ -26,24 +29,38 @@ public class ArithmeticTest {
         this.result = result;
     }
 
-    @org.junit.Test
+    @Test
     public void testOperation() {
-        int parsedOperand1 = Integer.valueOf(operand1);
-        int parsedOperand2 = Integer.valueOf(operand2);
-        int parsedResult = Integer.valueOf(result);
-        assertTrue(operation.matches("^[\\*\\/\\+\\-]$"));
-        switch (operation.charAt(0)) {
+        Integer parsedOperand1=null;
+        Integer parsedOperand2=null;
+        Integer parsedResult=null;
+        try{
+            parsedOperand1 = Integer.valueOf(operand1);
+            parsedOperand2 = Integer.valueOf(operand2);
+            parsedResult = Integer.valueOf(result);
+        }
+        catch (NumberFormatException e) {
+            fail("Wrong number: "+e.getMessage().substring(e.getMessage().indexOf('"'),e.getMessage().lastIndexOf('"')+1));
+        }
+        assertTrue("Wrong operation sign: \""+operation+"\"",operation.matches("^[\\*/\\+\\-]$"));
+        checkExpression(parsedOperand1,parsedOperand2,operation.charAt(0),parsedResult);
+    }
+
+    @Step("Check whether {0}{2}{1}={3}")
+    private void checkExpression(int operand1, int operand2, char operation, int result){
+        switch (operation) {
             case '+':
-                assertTrue(parsedOperand1 + parsedOperand2 == parsedResult);
+                assertTrue("Sum is wrong",operand1 + operand2 == result);
                 break;
             case '-':
-                assertTrue(parsedOperand1 - parsedOperand2 == parsedResult);
+                assertTrue("Difference is wrong",operand1 - operand2 == result);
                 break;
             case '*':
-                assertTrue(parsedOperand1 * parsedOperand2 == parsedResult);
+                assertTrue("Product is wrong",operand1 * operand2 == result);
                 break;
             case '/':
-                assertTrue(parsedOperand1 / parsedOperand2 == parsedResult);
+                assertTrue("Divisor is zero",operand2!=0);
+                assertTrue("Quotient is wrong",operand1 / operand2 == result);
                 break;
         }
     }
